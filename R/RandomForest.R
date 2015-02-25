@@ -77,6 +77,11 @@ library(rattle)
 library(rpart.plot)
 library(RColorBrewer)
 fancyRpartPlot(fit)
+# prediction
+Prediction <- predict(fit, df_test, type = "class")
+out <- data.frame(PassengerID = df_test$PassengerId, Survived = Prediction)
+write.csv(out, file = "Decision_tree.csv", row.names = FALSE)
+
 ######## cleaning up test dataset           ##############################
 ##########################################################################
 df_test_1 <- df_test %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
