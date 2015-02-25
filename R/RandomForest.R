@@ -2,7 +2,7 @@
 ## Description Apply Random forest to 
 ## and create a new csv file.
 ## Date: 24th Feb 2015
-## Kaggle titanic competition
+## Kaggle titanic competition in kaggle.com
 
 #################################################################################################
 
@@ -23,6 +23,11 @@ str(df_train)
 
 ########Cleaning up training dataset ######################################
 head(df_train)
+
+## get probability of people died and survived############################
+survival_prop = prop.table(table(df_train$Survived)) ## survival_prop[[1]] = 0.61 ( dead) and survival_prop[[2]]= 0.383 ( probability of alive or survived)
+### 38% of passengers survived the titanic disaster from the given training set.
+
 df_train_1 <- df_train %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
 head(df_train_1)
 
@@ -32,7 +37,7 @@ df_test_1 <- df_test %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
 df_test_1$Survived <- NULL # Delete the column if we have survived
 str(df_test_1)
 #
-###############################################################
+##########################table(train$Survived)#####################################
 ### Random Forest #############################################
 ###############################################################
 library(randomForest)
