@@ -91,10 +91,72 @@ fancyRpartPlot(fit)
 ##########################################################################
 ##### Prediction using Random Forest   ###################################
 ##########################################################################
+#Join together the test and train datasets
+df_test$Survived <- NA
+combi <- rbind(df_train, df_test)
+
+# Convert to a string
+combi$Name <- as.character(combi$Name)
+# Engineered variable: Title
+combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+combi$Title <- sub(' ', '', combi$Title)
+# Combine small title groups
+combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
+combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
+combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+# Convert to a factor
+combi$Title <- factor(combi$Title)
+
+# Engineered variable: Family size
+combi$FamilySize <- combi$SibSp + combi$Parch + 1
+# Engineered variable: Family
+combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
+combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
+combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+# Delete erroneous family IDs
+famIDs <- data.frame(table(combi$FamilyID))
+famIDs <- famIDs[famIDs$Freq <= 2,]
+combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+# Convert to a factor
+combi$FamilyID <- factor(combi$FamilyID)
+
+# Fill in all the missing Ages NA's
+summary(combi$Age)
+###########################################################################################
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##   0.17   21.00   28.00   29.88   39.00   80.00     263 
+###########################################################################################
+Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
+                data=combi[!is.na(combi$Age),], method="anova")
+combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
+
+summary(combi) ## check if something is still missing e.g Fare 
+
+#Embarked
+summary(combi$Embarked) ## check for Embarked missing data
+which(combi$Embarked == '')## get id for missing data ## 62 830
+combi$Embarked[c(62,830)] = "S" ## fill it with S
+combi$Embarked <- factor(combi$Embarked)
+
+#Fare
+summary(combi$Fare) ## check if fare is missing NA's ->1
+which(is.na(combi$Fare)) ## get id for missing data
+combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE) ## add median fare to missing data
 
 
+# New factor for Random Forests, only allowed <32 levels, so reduce number
+combi$FamilyID2 <- combi$FamilyID
+# Convert back to string
+combi$FamilyID2 <- as.character(combi$FamilyID2)
+combi$FamilyID2[combi$FamilySize <= 3] <- 'Small'
+# And convert back to factor
+combi$FamilyID2 <- factor(combi$FamilyID2)
 
 
+# Split back into test and train data sets also it is necessary to remove all the missing data from 
+## the data pool in order to apply Random Forest.
+train <- combi[1:891,]
+test <- combi[892:1309,]
 
 
 ######## cleaning up test dataset           ##############################
