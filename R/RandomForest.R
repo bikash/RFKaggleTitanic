@@ -28,6 +28,10 @@ head(df_train)
 survival_prop = prop.table(table(df_train$Survived)) ## survival_prop[[1]] = 0.61 ( dead) and survival_prop[[2]]= 0.383 ( probability of alive or survived)
 ### 38% of passengers survived the titanic disaster from the given training set.
 
+### Data clean up add passenger ID and survival record to this file train_data.csv
+out <- data.frame(PassengerID = df_train$PassengerId, Survived= df_train$Survived)
+write.csv(out,"data-cleanup/train_data.csv",row.names = FALSE)
+
 df_train_1 <- df_train %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
 head(df_train_1)
 
