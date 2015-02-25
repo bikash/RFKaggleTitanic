@@ -2,13 +2,15 @@
 #################################################################################################
 ## Author: Bikash Agrawal
 ## Date: 24th Feb 2015
-## Description Apply Random forest to predict the survival rate and create a new csv file.
-## Kaggle titanic competition in kaggle.com
+## Description: Apply Random forest to predict the survival rate and create a new csv file.
+##              Kaggle titanic competition in kaggle.com.
+##              http://www.kaggle.com/c/titanic-gettingStarted
 ## Step 1:  Data clean up
 ## step 2:  Calculate probability of survival and dead.
 ## Step 3:  Calculate probability of survival based on gender (male, female).
 ## Step 4:  Calculate probabiliy of survival based on Age.
 ## Step 5:  Calcualtion of survival probability using decision tree.
+## Step 6:  Calculate probability of survival using Random Forest.
 #################################################################################################
 #################################################################################################
 
@@ -26,6 +28,20 @@ head(df_train)
 summary(df_train)
 glimpse(df_train)
 str(df_train)
+
+
+##########################################################################
+##### Function to calculate prediction error #############################
+##########################################################################
+predict_error<-function(test,test1)
+{
+    error = test-test1
+    count = length(test)
+    error.per = sum(error)/count
+}
+##########################################################################
+##########################################################################
+
 
 ########Cleaning up training dataset #####################################
 head(df_train)
@@ -155,8 +171,9 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:891,]
-test <- combi[892:1309,]
+train <- combi[1:499,]
+#test <- combi[892:1309,]
+test <- combi[500:891,]
 
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=2000)
@@ -166,10 +183,17 @@ varImpPlot(fit)
 # Now let's make a prediction of survival rate and display in csv file. 
 Prediction <- predict(fit, test)
 out <- data.frame(PassengerID = test$PassengerId, Survived = Prediction)
+actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
+
+
+error = out$Survived-actual.out$Survived
+count = length(out$Survived)
+error.per = sum(error)/count
+
 write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FALSE)
 
 # Build condition inference tree Random Forest
-
+library(cforest)
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
 #prediction
@@ -177,28 +201,7 @@ Prediction <- predict(fit, test, OOB=TRUE, type = "response")
 out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
 write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
 
-######## cleaning up test dataset           ##############################
-##########################################################################
-df_test_1 <- df_test %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
-df_test_1$Survived <- NULL # Delete the column if we have survived
-str(df_test_1)
-#
-##########################table(train$Survived)##########################
-### Random Forest #######################################################
-#########################################################################
-library(randomForest)
-mdl_rf <- randomForest(Survived ~ Pclass + Sex + SibSp+Parch+Fare, data = df_train_1,importance = TRUE)
-mdl_rf
-importance(mdl_rf)
-summary(df_test_1)
-df_test_1$Fare[is.na(df_test_1$Fare)] <- 35.0
 
-## prediction
-pred <- predict(mdl_rf,newdata = (df_test_1 %>% select(-PassengerId)))
-pred
-df_test_1$Survived <- pred
-head(df_test_1)
-out <- df_test_1 %>% select(PassengerId,Survived)
-write.csv(out,"data-cleanup/r-prediction-rf.csv",row.names = FALSE)
+#########################################################################
 
 
