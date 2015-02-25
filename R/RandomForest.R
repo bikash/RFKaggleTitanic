@@ -65,7 +65,7 @@ summary(df_train$Age)
 
 
 ##########################################################################
-##### Prediction using Decision Tree ####################################
+##### Prediction using Decision Tree  ####################################
 ##########################################################################
 library(rpart)
 fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data=df_train, method="class")
@@ -81,6 +81,21 @@ fancyRpartPlot(fit)
 Prediction <- predict(fit, df_test, type = "class")
 out <- data.frame(PassengerID = df_test$PassengerId, Survived = Prediction)
 write.csv(out, file = "Decision_tree.csv", row.names = FALSE)
+
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data=df_train,
+             method="class", control=rpart.control(minsplit=2, cp=0))
+fancyRpartPlot(fit)
+##########################################################################
+##########################################################################
+
+##########################################################################
+##### Prediction using Random Forest   ###################################
+##########################################################################
+
+
+
+
+
 
 ######## cleaning up test dataset           ##############################
 ##########################################################################
