@@ -80,7 +80,7 @@ fancyRpartPlot(fit)
 # prediction
 Prediction <- predict(fit, df_test, type = "class")
 out <- data.frame(PassengerID = df_test$PassengerId, Survived = Prediction)
-write.csv(out, file = "Decision_tree.csv", row.names = FALSE)
+write.csv(out, file = "data-cleanup/Decision_tree.csv", row.names = FALSE)
 
 fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data=df_train,
              method="class", control=rpart.control(minsplit=2, cp=0))
@@ -158,6 +158,24 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 train <- combi[1:891,]
 test <- combi[892:1309,]
 
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+                    data=train, importance=TRUE, ntree=2000)
+# Look at variable importance
+varImpPlot(fit)
+
+# Now let's make a prediction of survival rate and display in csv file. 
+Prediction <- predict(fit, test)
+out <- data.frame(PassengerID = test$PassengerId, Survived = Prediction)
+write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FALSE)
+
+# Build condition inference tree Random Forest
+
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+               data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+#prediction
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
 
 ######## cleaning up test dataset           ##############################
 ##########################################################################
