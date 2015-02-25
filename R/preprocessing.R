@@ -9,10 +9,7 @@ setwd("/Users/bikash/repos/RFKaggleTitanic/")
 #
 print("Data Cleaning up process......")
 rm(list = ls(all = TRUE))
-#
-gc(TRUE)
-gcinfo(FALSE)
-#
+
 library(dplyr)
 sessionInfo()
 df_train = read.csv('titanic-data/train.csv')
@@ -53,3 +50,11 @@ df_test$Survived <- ifelse(df_test$Sex == "female",1,0)
 head(df_test)
 out <- df_test %>% select(PassengerId,Survived)
 write.csv(out,"data-cleanup/r-sub-02.csv",row.names = FALSE)
+
+
+########### Prediction based on Age ################
+####################################################
+table_1 <- table(df_train$Age,df_train$Survived)
+table_1
+#View(table_1)
+
