@@ -11,12 +11,8 @@ In this challenge, we ask you to complete the analysis of what sorts of people w
 http://www.kaggle.com/c/titanic-gettingStarted
 
 #Steps for Kaggle Competition
-Install R.
 
-Clone this github repository.
-
-Download data from Kaggle. 
-
+1. Download data from Kaggle. 
 We will be using the data from 2 Kaggle competitions
 Titanic: Machine Learning from Disaster
 Download data from http://www.kaggle.com/c/titanic-gettingStarted/data
