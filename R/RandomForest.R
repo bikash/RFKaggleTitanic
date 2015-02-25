@@ -25,15 +25,33 @@ str(df_train)
 head(df_train)
 
 ## get probability of people died and survived############################
-survival_prop = prop.table(table(df_train$Survived)) ## survival_prop[[1]] = 0.61 ( dead) and survival_prop[[2]]= 0.383 ( probability of alive or survived)
+survival_prop = prop.table(table(df_train$Survived)) 
+## survival_prop[[1]] = 0.61 ( dead) and survival_prop[[2]]= 0.383 ( probability of alive or survived)
 ### 38% of passengers survived the titanic disaster from the given training set.
+### Using this as probability model we can predict 61% of new test data will die.
 
 ### Data clean up add passenger ID and survival record to this file train_data.csv
 out <- data.frame(PassengerID = df_train$PassengerId, Survived= df_train$Survived)
 write.csv(out,"data-cleanup/train_data.csv",row.names = FALSE)
+##########################################################################
 
 df_train_1 <- df_train %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
 head(df_train_1)
+
+### Survival probability based on gender #################################
+##########################################################################
+survival_prop_sex = prop.table(table(df_train$Sex,df_train$Survived),1) 
+## 1 stand for using rowwise probability and 2 will give column proportions.
+################ output #################################################
+###                     0          1
+###       female    0.2579618   0.7420382  ## majority of female survived
+###       male      0.8110919   0.1889081
+##########################################################################
+################## Using prediction based on sex#########################
+df_test$Survived <- 0
+df_test$Survived[df_test$Sex == 'female'] <- 1
+### This model is based on assumption of past data that majority of female will survive.
+
 
 ######## cleaning up test dataset           ##############################
 ##########################################################################
