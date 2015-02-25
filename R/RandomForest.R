@@ -1,9 +1,15 @@
-## Author Bikash Agrawal
-## Description Apply Random forest to 
-## and create a new csv file.
+#################################################################################################
+#################################################################################################
+## Author: Bikash Agrawal
 ## Date: 24th Feb 2015
+## Description Apply Random forest to predict the survival rate and create a new csv file.
 ## Kaggle titanic competition in kaggle.com
-
+## Step 1:  Data clean up
+## step 2:  Calculate probability of survival and dead.
+## Step 3:  Calculate probability of survival based on gender (male, female).
+## Step 4:  Calculate probabiliy of survival based on Age.
+## Step 5:  Calcualtion of survival probability using decision tree.
+#################################################################################################
 #################################################################################################
 
 ### setting path of repo folder.
@@ -21,7 +27,7 @@ summary(df_train)
 glimpse(df_train)
 str(df_train)
 
-########Cleaning up training dataset ######################################
+########Cleaning up training dataset #####################################
 head(df_train)
 
 ## get probability of people died and survived############################
@@ -47,21 +53,39 @@ survival_prop_sex = prop.table(table(df_train$Sex,df_train$Survived),1)
 ###       female    0.2579618   0.7420382  ## majority of female survived
 ###       male      0.8110919   0.1889081
 ##########################################################################
-################## Using prediction based on sex#########################
+################## Using prediction based on sex##########################
 df_test$Survived <- 0
 df_test$Survived[df_test$Sex == 'female'] <- 1
 ### This model is based on assumption of past data that majority of female will survive.
 
+#### Survival probability based on Age ###################################
+##########################################################################
+summary(df_train$Age)
 
+
+
+##########################################################################
+##### Prediction using Decision Tree ####################################
+##########################################################################
+library(rpart)
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked, data=df_train, method="class")
+plot(fit)
+text(fit)
+
+### Make a fancy plot for decision tree #################################
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+fancyRpartPlot(fit)
 ######## cleaning up test dataset           ##############################
 ##########################################################################
 df_test_1 <- df_test %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
 df_test_1$Survived <- NULL # Delete the column if we have survived
 str(df_test_1)
 #
-##########################table(train$Survived)#####################################
-### Random Forest #############################################
-###############################################################
+##########################table(train$Survived)##########################
+### Random Forest #######################################################
+#########################################################################
 library(randomForest)
 mdl_rf <- randomForest(Survived ~ Pclass + Sex + SibSp+Parch+Fare, data = df_train_1,importance = TRUE)
 mdl_rf
