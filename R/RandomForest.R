@@ -12,6 +12,8 @@
 ## Step 4:  Calculate probabiliy of survival based on Age.
 ## Step 5:  Calcualtion of survival probability using decision tree.
 ## Step 6:  Calculate probability of survival using Random Forest.
+## Step 7:  Calculate probability of survival using Condition Inference Random Forest.
+## Step 8:  Calculate probability of survival using Support Vector Machine.
 #################################################################################################
 #################################################################################################
 
@@ -205,16 +207,28 @@ test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
+importance(fit)
 varImpPlot(fit)
+#
+fit$confusion
+##########################################################################
+##        0   1 class.error
+##    0 277  30  0.09771987
+##    1  51 142  0.26424870
+##########################################################################
 
 # Now let's make a prediction of survival rate and display in csv file. 
 Prediction <- predict(fit, test)
 out <- data.frame(PassengerID = test$PassengerId, Survived = as.numeric(Prediction))
+#########################################################################
+## calculate accuracy of model
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
+#########################################################################
+
+### Mean square prediction error
 out$Survived <- ifelse(out$Survived == 2,1,0)
 actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
-
-#########################################################################
-### Mean square prediction error
 MSPE = mean((out$Survived-actual.out$Survived)^2)
 cat(" Mean Square prediction error is : -> ", MSPE)
 ##count = length(out$Survived)
@@ -238,5 +252,33 @@ write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FAL
 
 
 #########################################################################
+
+
+##########################################################################
+##### Prediction using Support Vector Machine   ##########################
+##########################################################################
+# SVM : radial kernel
+
+library(e1071)
+mdl_svm <- svm(Survived ~ Pclass + Sex + SibSp+Parch+Fare, data = train, kernel = "sigmoid") ## sigmoid kernel
+mdl_svm
+
+str(test)
+pred <- predict(mdl_svm,newdata = test)
+pred
+out <- data.frame(PassengerId = test$PassengerId, Survived = pred)
+head(out)
+
+#
+#out <- test %>% select(PassengerId,Survived)
+#########################################################################
+### Mean square prediction error
+#out$Survived <- ifelse(out$Survived == 2,1,0)
+actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
+MSPE = mean((out$Survived-actual.out$Survived)^2)
+cat(" Mean Square prediction error is : -> ", MSPE)
+#########################################################################
+
+write.csv(out,file="data-cleanup/svm-predict.csv",row.names = FALSE)
 
 
