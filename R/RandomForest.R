@@ -275,8 +275,6 @@ pred
 out <- data.frame(PassengerId = test$PassengerId, Survived = pred)
 head(out)
 
-#
-#out <- test %>% select(PassengerId,Survived)
 #########################################################################
 ### Mean square prediction error
 #out$Survived <- ifelse(out$Survived == 2,1,0)
@@ -286,5 +284,37 @@ cat(" Mean Square prediction error is : -> ", MSPE)
 #########################################################################
 
 write.csv(out,file="data-cleanup/svm-predict.csv",row.names = FALSE)
+#########################################################################
+#########################################################################
 
+##########################################################################
+##### Prediction using Gradient boosting machine (GBM)  ##################
+##########################################################################
+library(caret)
+library(pROC)
+forest.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, importance=TRUE)
+
+fitControl <- trainControl(## 10-fold CV
+method = "repeatedcv",
+  number = 10,
+  ## repeated ten times
+  repeats = 10)
+
+gbm.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, distribution = "gaussian", method = "gbm", 
+                   importance=TRUE, trControl = fitControl,verbose = FALSE)
+# Look at variable importance
+
+#
+# prediction
+#predict<- predict(forest.model , test , type="prob")
+predict<- predict(forest.model , test )
+result.roc.model1 <-  roc(test$Survived, predict)
+plot(result.roc.model1, print.thres="best", print.thres.best.method="closest.topleft")
+
+result.coords.model1 <- coords(  result.roc.model1, "best", best.method="closest.topleft",
+                                 ret=c("threshold", "accuracy"))
+result.coords.model1
+
+#########################################################################
+#########################################################################
 
