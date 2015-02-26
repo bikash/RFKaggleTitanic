@@ -49,6 +49,12 @@ glimpse(df_train)
 str(df_train)
 head(df_train)
 
+###########Get missing data information###################################
+library(Amelia)
+missmap(df_train, main = "Missing Map train")
+missmap(df_test, main = "Missing Map Test") 
+## we can see age is badly missing in both the datasets
+
 ## get probability of people died and survived############################
 survival_prop = prop.table(table(df_train$Survived)) 
 ## survival_prop[[1]] = 0.61 ( dead) and survival_prop[[2]]= 0.383 ( probability of alive or survived)
