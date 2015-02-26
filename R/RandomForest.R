@@ -130,6 +130,7 @@ fancyRpartPlot(fit)
 ##########################################################################
 ##########################################################################
 
+#step 5:
 ##########################################################################
 ##### Prediction using Random Forest   ###################################
 ##########################################################################
@@ -197,10 +198,9 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:891,]
-test <- combi[892:1309,]
-#test <- combi[500:891,]
-
+train <- combi[1:500,]
+#test <- combi[892:1309,]
+test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=5000)
 # Look at variable importance
@@ -212,13 +212,20 @@ out <- data.frame(PassengerID = test$PassengerId, Survived = as.numeric(Predicti
 out$Survived <- ifelse(out$Survived == 2,1,0)
 actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
 
-
-error = abs(out$Survived-actual.out$Survived)
-count = length(out$Survived)
-error.per = sum(error)/count ## 18 % error
-
+#########################################################################
+### Mean square prediction error
+MSPE = mean((out$Survived-actual.out$Survived)^2)
+cat(" Mean Square prediction error is : -> ", MSPE)
+##count = length(out$Survived)
+#error.per = sum(error)/count ## 18 % error
+#########################################################################
 write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FALSE)
+##########################################################################
+##########################################################################
 
+
+##########################################################################
+##########################################################################
 # Build condition inference tree Random Forest
 library(cforest)
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
