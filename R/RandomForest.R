@@ -19,16 +19,8 @@
 getwd()
 setwd("/Users/bikash/repos/RFKaggleTitanic/")
 
-print("Data Cleaning up process......")
-
 library(dplyr)
 sessionInfo()
-df_train = read.csv('titanic-data/train.csv') ## read data from csv file
-df_test = read.csv('titanic-data/test.csv')
-head(df_train)
-summary(df_train)
-glimpse(df_train)
-str(df_train)
 
 
 ##########################################################################
@@ -43,8 +35,16 @@ predict_error<-function(test,test1)
 ##########################################################################
 ##########################################################################
 
-
+##########################################################################
 ########Cleaning up training dataset #####################################
+##########################################################################
+print("Data Cleaning up process......")
+df_train = read.csv('titanic-data/train.csv') ## read data from csv file
+df_test = read.csv('titanic-data/test.csv')
+head(df_train)
+summary(df_train)
+glimpse(df_train)
+str(df_train)
 head(df_train)
 
 ## get probability of people died and survived############################
@@ -173,15 +173,16 @@ Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + F
                 data=combi[!is.na(combi$Age),], method="anova")
 combi$Age[is.na(combi$Age)] <- predict(Agefit, combi[is.na(combi$Age),])
 
-summary(combi) ## check if something is still missing e.g Fare 
 
-#Embarked
+
+summary(combi) ## check if something is still missing e.g Fare 
+#Embarked, All missing Embarked -> just make them embark from most common place
 summary(combi$Embarked) ## check for Embarked missing data
 which(combi$Embarked == '')## get id for missing data ## 62 830
 combi$Embarked[c(62,830)] = "S" ## fill it with S
 combi$Embarked <- factor(combi$Embarked)
 
-#Fare
+# All the missing Fares -> assume median of their respective class
 summary(combi$Fare) ## check if fare is missing NA's ->1
 which(is.na(combi$Fare)) ## get id for missing data
 combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE) ## add median fare to missing data
@@ -202,7 +203,7 @@ train <- combi[1:500,]
 #test <- combi[892:1309,]
 test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
-                    data=train, importance=TRUE, ntree=5000)
+                    data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
 varImpPlot(fit)
 
@@ -225,8 +226,8 @@ write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FA
 
 
 ##########################################################################
+##### Prediction using Condition Inference Random Forest  ################
 ##########################################################################
-# Build condition inference tree Random Forest
 library(cforest)
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
