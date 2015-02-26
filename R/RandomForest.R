@@ -292,14 +292,9 @@ write.csv(out,file="data-cleanup/svm-predict.csv",row.names = FALSE)
 ##########################################################################
 library(caret)
 library(pROC)
-forest.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, importance=TRUE)
-
-fitControl <- trainControl(## 10-fold CV
-method = "repeatedcv",
-  number = 10,
-  ## repeated ten times
-  repeats = 10)
-
+forest.model <- train(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID, train, importance=TRUE)
+## 10-fold CV
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 gbm.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, distribution = "gaussian", method = "gbm", 
                    importance=TRUE, trControl = fitControl,verbose = FALSE)
 # Look at variable importance
@@ -308,12 +303,21 @@ gbm.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, distribution 
 # prediction
 #predict<- predict(forest.model , test , type="prob")
 predict<- predict(forest.model , test )
+out <- data.frame(PassengerId = test$PassengerId, Survived = predict)
+head(out)
+out$Survived <- ifelse(out$Survived == 2,1,0)
+actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
+MSPE = mean((out$Survived-actual.out$Survived)^2)
+cat(" Mean Square prediction error is : -> ", MSPE)
+### Plot ROC curve.
 result.roc.model1 <-  roc(test$Survived, predict)
+
 plot(result.roc.model1, print.thres="best", print.thres.best.method="closest.topleft")
 
 result.coords.model1 <- coords(  result.roc.model1, "best", best.method="closest.topleft",
                                  ret=c("threshold", "accuracy"))
 result.coords.model1
+
 
 #########################################################################
 #########################################################################
