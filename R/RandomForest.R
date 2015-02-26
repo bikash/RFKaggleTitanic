@@ -2,7 +2,8 @@
 #################################################################################################
 ## Author: Bikash Agrawal
 ## Date: 24th Feb 2015
-## Description: Apply Random forest to predict the survival rate and create a new csv file.
+## Email: er.bikash21@gmail.com
+## Description: Apply Random forest to predict the survival rate and create a new csv file. This algorithm might helps to be in top 10 in Kaggle competition.
 ##              Kaggle titanic competition in kaggle.com.
 ##              http://www.kaggle.com/c/titanic-gettingStarted
 ## Step 1:  Data clean up
@@ -53,13 +54,12 @@ survival_prop = prop.table(table(df_train$Survived))
 ### Using this as probability model we can predict 61% of new test data will die.
 
 ### Data clean up add passenger ID and survival record to this file train_data.csv
-out <- data.frame(PassengerID = df_train$PassengerId, Survived= df_train$Survived)
+out <- data.frame(PassengerId = df_train$PassengerId, Survived= df_train$Survived)
 write.csv(out,"data-cleanup/train_data.csv",row.names = FALSE)
 ##########################################################################
 
-df_train_1 <- df_train %>% select(-Name,-Ticket,-Cabin,-Embarked,-Age)
-head(df_train_1)
-
+###step 2:
+##########################################################################
 ### Survival probability based on gender #################################
 ##########################################################################
 survival_prop_sex = prop.table(table(df_train$Sex,df_train$Survived),1) 
@@ -72,14 +72,40 @@ survival_prop_sex = prop.table(table(df_train$Sex,df_train$Survived),1)
 ################## Using prediction based on sex##########################
 df_test$Survived <- 0
 df_test$Survived[df_test$Sex == 'female'] <- 1
+out <- data.frame(PassengerId = df_test$PassengerId, Survived = df_test$Survived)
+write.csv(out, file = "data-cleanup/gendermodel-predict.csv", row.names = FALSE)
 ### This model is based on assumption of past data that majority of female will survive.
+##########################################################################
+##########################################################################
 
+###Step 3:
+##########################################################################
 #### Survival probability based on Age ###################################
 ##########################################################################
 summary(df_train$Age)
+df_train$Child <- 0
+df_train$Child[train$Age < 18] <- 1
+aggregate(Survived ~ Child + Sex, data=df_train, FUN=sum)
+aggregate(Survived ~ Child + Sex, data=df_train, FUN=length)
+aggregate(Survived ~ Child + Sex, data=df_train, FUN=function(x) {sum(x)/length(x)})
+# Look at class and fare patterns
+df_train$Fare2 <- '30+'
+df_train$Fare2[df_train$Fare < 30 & df_train$Fare >= 20] <- '20-30'
+df_train$Fare2[df_train$Fare < 20 & df_train$Fare >= 10] <- '10-20'
+df_train$Fare2[df_train$Fare < 10] <- '<10'
+aggregate(Survived ~ Fare2 + Pclass + Sex, data=df_train, FUN=function(x) {sum(x)/length(x)})
+# runing prediciton 
+df_test$Survived <- 0
+# Update the prediction to say that all females will survive
+df_test$Survived[df_test$Sex == 'female'] <- 1
+# Update once more to say that females who pay more for a third class fare
+df_test$Survived[df_test$Sex == 'female' & df_test$Pclass == 3 & df_test$Fare >= 20] <- 0
+out <- data.frame(PassengerId = df_test$PassengerId, Survived = df_test$Survived)
+write.csv(out, file = "data-cleanup/agemodel-predict.csv", row.names = FALSE)
+##########################################################################
+##########################################################################
 
-
-
+### Step 4:
 ##########################################################################
 ##### Prediction using Decision Tree  ####################################
 ##########################################################################
@@ -171,24 +197,25 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:499,]
-#test <- combi[892:1309,]
-test <- combi[500:891,]
+train <- combi[1:891,]
+test <- combi[892:1309,]
+#test <- combi[500:891,]
 
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
-                    data=train, importance=TRUE, ntree=2000)
+                    data=train, importance=TRUE, ntree=5000)
 # Look at variable importance
 varImpPlot(fit)
 
 # Now let's make a prediction of survival rate and display in csv file. 
 Prediction <- predict(fit, test)
-out <- data.frame(PassengerID = test$PassengerId, Survived = Prediction)
+out <- data.frame(PassengerID = test$PassengerId, Survived = as.numeric(Prediction))
+out$Survived <- ifelse(out$Survived == 2,1,0)
 actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survived)
 
 
-error = out$Survived-actual.out$Survived
+error = abs(out$Survived-actual.out$Survived)
 count = length(out$Survived)
-error.per = sum(error)/count
+error.per = sum(error)/count ## 18 % error
 
 write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FALSE)
 
