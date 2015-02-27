@@ -28,10 +28,10 @@ sessionInfo()
 ##########################################################################
 ##### Function to calculate prediction error #############################
 ##########################################################################
-predict_error<-function(test,test1)
+predict_error<-function(orignal.test,pred.test)
 {
-    error = test-test1
-    count = length(test)
+    error = orignal.test-pred.test
+    count = length(original.test)
     error.per = sum(error)/count
 }
 ##########################################################################
@@ -296,8 +296,6 @@ forest.model <- train(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch +
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 gbm.model <- train(Survived ~ Pclass + Sex + SibSp +Parch , train, distribution = "gaussian", method = "gbm", 
                    importance=TRUE, trControl = fitControl,verbose = FALSE)
-# Look at variable importance
-
 #
 # prediction
 #predict<- predict(forest.model , test , type="prob")
