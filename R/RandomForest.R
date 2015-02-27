@@ -195,7 +195,6 @@ summary(combi$Fare) ## check if fare is missing NA's ->1
 which(is.na(combi$Fare)) ## get id for missing data
 combi$Fare[1044] <- median(combi$Fare, na.rm=TRUE) ## add median fare to missing data
 
-
 # New factor for Random Forests, only allowed <32 levels, so reduce number
 combi$FamilyID2 <- combi$FamilyID
 # Convert back to string
@@ -210,7 +209,7 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 train <- combi[1:500,]
 #test <- combi[892:1309,]
 test <- combi[501:891,]
-fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID2,
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked  + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
 importance(fit)
