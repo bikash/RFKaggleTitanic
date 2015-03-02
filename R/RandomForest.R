@@ -174,8 +174,8 @@ combi$FamilyID <- factor(combi$FamilyID)
 # Fill in all the missing Ages NA's
 summary(combi$Age)
 ###########################################################################################
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-##   0.17   21.00   28.00   29.88   39.00   80.00     263 
+##    Min. 1st Qu.  Median    Mean  3rd Qu.    Max.    NA's 
+##   0.17   21.00   28.00   29.88     39.00   80.00     263 
 ###########################################################################################
 Agefit <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + FamilySize,
                 data=combi[!is.na(combi$Age),], method="anova")
@@ -213,7 +213,7 @@ fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + F
                     data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
 importance(fit)
-varImpPlot(fit)
+plot(varImpPlot(fit), type ='o')
 #
 fit$confusion
 ##########################################################################
@@ -254,7 +254,6 @@ fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare +
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
 out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
 write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
-
 
 #########################################################################
 
@@ -314,8 +313,6 @@ plot(result.roc.model1, print.thres="best", print.thres.best.method="closest.top
 result.coords.model1 <- coords(  result.roc.model1, "best", best.method="closest.topleft",
                                  ret=c("threshold", "accuracy"))
 result.coords.model1
-
-
 #########################################################################
 #########################################################################
 
