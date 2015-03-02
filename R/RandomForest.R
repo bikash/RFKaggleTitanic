@@ -14,6 +14,10 @@
 ## Step 6:  Calculate probability of survival using Random Forest.
 ## Step 7:  Calculate probability of survival using Condition Inference Random Forest.
 ## Step 8:  Calculate probability of survival using Support Vector Machine.
+## References: 
+## [1] http://nbviewer.ipython.org/github/agconti/kaggle-titanic/blob/master/Titanic.ipynb
+## [2] http://www.philippeadjiman.com/blog/category/machine-learning/
+## [3] http://rforwork.info/tag/linear-discriminant-analysis/
 #################################################################################################
 #################################################################################################
 
@@ -294,7 +298,6 @@ actual.out <- data.frame(PassengerID = test$PassengerId, Survived = test$Survive
 MSPE = mean((out$Survived-actual.out$Survived)^2)
 cat(" Mean Square prediction error is : -> ", MSPE)
 #########################################################################
-
 write.csv(out,file="data-cleanup/svm-predict.csv",row.names = FALSE)
 #########################################################################
 #########################################################################
