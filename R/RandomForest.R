@@ -206,9 +206,9 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:891,]
-test <- combi[892:1309,]
-#test <- combi[501:891,]
+train <- combi[1:500,]
+#test <- combi[892:1309,]
+test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked  + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
@@ -255,14 +255,12 @@ cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch +
 plot(train$Survived ~ as.factor(where(cforest.ctree)))
 #prediction
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
-out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
-
-
-write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
-#########################################################################
 ## calculate accuracy of model
 accuracy = sum(Prediction==test$Survived)/length(Prediction)
-print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 100% accuracy of model using random forest
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 83% accuracy of model using random forest
+#########################################################################
+out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
+write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
 #########################################################################
 #########################################################################
 
@@ -270,7 +268,9 @@ print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 100% accuracy of model u
 ##########################################################################
 ##### Prediction using Linear Discriminant Analysis    ################
 ##########################################################################
-
+library("MASS") 
+fit <- lda(formula= Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+               data = train)
 
 ##########################################################################
 ##### Prediction using Support Vector Machine   ##########################
