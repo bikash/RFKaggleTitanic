@@ -206,9 +206,9 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:500,]
-#test <- combi[892:1309,]
-test <- combi[501:891,]
+train <- combi[1:891,]
+test <- combi[892:1309,]
+#test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked  + FamilySize + FamilyID2,
                     data=train, importance=TRUE, ntree=1000)
 # Look at variable importance
@@ -247,15 +247,29 @@ write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FA
 ##########################################################################
 ##### Prediction using Condition Inference Random Forest  ################
 ##########################################################################
-library(cforest)
+library(party)
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+                      data = train)
+plot(train$Survived ~ as.factor(where(cforest.ctree)))
 #prediction
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
 out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
-write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
 
+
+write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
 #########################################################################
+## calculate accuracy of model
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 100% accuracy of model using random forest
+#########################################################################
+#########################################################################
+
+
+##########################################################################
+##### Prediction using Linear Discriminant Analysis    ################
+##########################################################################
 
 
 ##########################################################################
