@@ -194,6 +194,10 @@ which(combi$Embarked == '')## get id for missing data ## 62 830
 combi$Embarked[c(62,830)] = "S" ## fill it with S
 combi$Embarked <- factor(combi$Embarked)
 
+# All the missing cabin
+summary(combi$Cabin) ## check if fare is missing NA's ->1
+which(is.na(combi$Cabin)) ## get id for missing data
+
 # All the missing Fares -> assume median of their respective class
 summary(combi$Fare) ## check if fare is missing NA's ->1
 which(is.na(combi$Fare)) ## get id for missing data
@@ -252,19 +256,34 @@ write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FA
 ##### Prediction using Condition Inference Random Forest  ################
 ##########################################################################
 library(party)
-fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch +Cabin + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
-cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
-                      data = train)
-plot(train$Survived ~ as.factor(where(cforest.ctree)))
+
+## Tree structure
+cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Cabin + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+                      data = train,   
+                      controls = ctree_control(
+                        teststat="quad",
+                        testtype="Univariate",
+                        mincriterion=.95,
+                        minsplit=10, 
+                        minbucket=5,
+                        maxdepth=0
+                      ))
+plot(cforest.ctree)
+
+
 #prediction
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+prop.table(table(test$Survived, Prediction),1)
+
 ## calculate accuracy of model
-accuracy = sum(Prediction==test$Survived)/length(Prediction)
-print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 83% accuracy of model using random forest
+library(kernlab)
 #########################################################################
 out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
 write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
+
+
 #########################################################################
 #########################################################################
 
@@ -273,8 +292,14 @@ write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FAL
 ##### Prediction using Linear Discriminant Analysis    ################
 ##########################################################################
 library("MASS") 
+
 fit <- lda(formula= Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train)
+# prediction
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+## calculate accuracy of model
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 83% accuracy of model
 
 ##########################################################################
 ##### Prediction using Support Vector Machine   ##########################
