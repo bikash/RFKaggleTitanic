@@ -315,7 +315,6 @@ pred <- predict(mdl_svm,newdata = test)
 pred
 out <- data.frame(PassengerId = test$PassengerId, Survived = pred)
 head(out)
-
 #########################################################################
 ### Mean square prediction error
 #out$Survived <- ifelse(out$Survived == 2,1,0)
@@ -326,6 +325,21 @@ cat(" Mean Square prediction error is : -> ", MSPE)
 write.csv(out,file="data-cleanup/svm-predict.csv",row.names = FALSE)
 #########################################################################
 #########################################################################
+
+##########################################################################
+##### Prediction using Support Vector Machine Kernel #####################
+##########################################################################
+library(kernlab)
+m_ksvm <- ksvm( as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Cabin + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+           data = train, kernel = "tanhdot", C = 100, kpar = list(scale = 0.01, offset = -1.2))
+Prediction <- predict(m_ksvm,newdata = test)
+## calculate accuracy of model
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 82.84% accuracy of model 
+#########################################################################
+#########################################################################
+
+
 
 ##########################################################################
 ##### Prediction using Gradient boosting machine (GBM)  ##################
