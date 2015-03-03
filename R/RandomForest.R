@@ -26,6 +26,7 @@ getwd()
 setwd("/Users/bikash/repos/RFKaggleTitanic/")
 
 library(dplyr)
+library(zoo)
 sessionInfo()
 
 
@@ -146,6 +147,9 @@ fancyRpartPlot(fit)
 ##########################################################################
 ##### Prediction using Random Forest   ###################################
 ##########################################################################
+library(randomForest)
+library(lattice)
+library(caret)
 #Join together the test and train datasets
 df_test$Survived <- NA
 combi <- rbind(df_train, df_test)
@@ -218,10 +222,10 @@ train <- combi[1:500,]
 #test <- combi[892:1309,]
 test <- combi[501:891,]
 fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked  + FamilySize + FamilyID2,
-                    data=train, importance=TRUE, ntree=1000)
+                    data=train, importance=TRUE, ntree=2000)
 # Look at variable importance
 importance(fit)
-plot(varImpPlot(fit), type ='o')
+plot(varImpPlot(fit))
 #
 fit$confusion
 ##########################################################################
@@ -229,6 +233,24 @@ fit$confusion
 ##    0 277  30  0.09771987
 ##    1  51 142  0.26424870
 ##########################################################################
+
+# How many members in each family?
+family_count <- table( factor( combi$FamilySize ) )
+get_count <- function( fam ) { family_count[[fam]] }
+combi$fam_count <- sapply(combi$FamilySize,FUN=get_count)
+combi$alone     <- factor(ifelse(combi$FamilySize>1,"Family","Alone"))
+train$alone <- combi$alone[1:500]
+library(ggplot2)
+p3 <- ggplot( train, aes(x=alone,y=Survived) )  + 
+  stat_summary( fun.y = mean, ymin=0, ymax=1, geom="bar", size=4 ) +  
+  facet_grid( Pclass~Sex ) + xlab( 'traveling') + ylab( 'survival rate' ) + theme_bw()
+print( p3 )
+# Plot for the overall effect
+p4 <- ggplot( train, aes(x=alone,y=Survived) )  + 
+  stat_summary( fun.y = mean, ymin=0, ymax=1, geom="bar", size=4 ) + xlab( 'traveling') + ylab( 'survival rate' ) + theme_bw()
+print( p4 )
+ggsave( plot=p3, file="img/sur_rate_family.png" )
+ggsave( plot=p4, file="sur_rate_family_all.png", width=3, height=3 )
 
 # Now let's make a prediction of survival rate and display in csv file. 
 Prediction <- predict(fit, test)
@@ -256,11 +278,11 @@ write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FA
 ##### Prediction using Condition Inference Random Forest  ################
 ##########################################################################
 library(party)
-fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch +Cabin + Fare + Embarked + Title + FamilySize + FamilyID,
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Ticket+ Fare + Embarked + Title + FamilySize + FamilyID2,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
 
 ## Tree structure
-cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Cabin + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+fit = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Cabin + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                       data = train,   
                       controls = ctree_control(
                         teststat="quad",
@@ -270,20 +292,18 @@ cforest.ctree = ctree(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Cabin +
                         minbucket=5,
                         maxdepth=0
                       ))
-plot(cforest.ctree)
-
+plot(fit)
+fancyRpartPlot(fit)
 
 #prediction
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
 prop.table(table(test$Survived, Prediction),1)
-
 ## calculate accuracy of model
-library(kernlab)
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 82.84% accuracy of model
 #########################################################################
 out <- data.frame(PassengerId = test$PassengerId, Survived = Prediction)
 write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FALSE)
-
-
 #########################################################################
 #########################################################################
 
@@ -293,13 +313,24 @@ write.csv(out, file = "data-cleanup/ciRandomForest-predict.csv", row.names = FAL
 ##########################################################################
 library("MASS") 
 
-fit <- lda(formula= Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
-               data = train)
+fit <- lda(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked ,
+               data = train, na.action="na.omit", CV=TRUE)
+# Panels of histograms and overlayed density plots
+# for 1st discriminant function
+plot(fit, dimen=2, type="both") # fit from lda
+# Exploratory Graph for LDA or QDA
+library(klaR)
+partimat(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked ,data=train,method="lda")
+
 # prediction
 Prediction <- predict(fit, test, OOB=TRUE, type = "response")
 ## calculate accuracy of model
 accuracy = sum(Prediction==test$Survived)/length(Prediction)
-print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 83% accuracy of model
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 80% accuracy of model
+
+#########################################################################
+#########################################################################
+
 
 ##########################################################################
 ##### Prediction using Support Vector Machine   ##########################
@@ -372,3 +403,11 @@ result.coords.model1
 #########################################################################
 #########################################################################
 
+##########################################################################
+########### Prediction using K-NN  #######################################
+##########################################################################
+predictionNN = knn(scale(train), scale(test), survival)
+predictionNN
+
+#########################################################################
+#########################################################################
