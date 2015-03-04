@@ -126,6 +126,7 @@ missmap(combi, main="Titanic Training Data - Missings Map",
 ##########################################################################
 ##### Display plot of different variables                 ################
 ##########################################################################
+pdf("graphs/plot.pdf",bg="white")
 barplot(table(train$Survived),names.arg = c("Dead", "Survived"), main="Survived (passenger)", col="blue")
 barplot(table(combi$Pclass), names.arg = c("first", "second", "third"), main="Pclass (passenger traveling class)", col="firebrick")
 barplot(table(combi$Sex), main="Sex (gender)", col="darkviolet")
@@ -135,9 +136,22 @@ barplot(table(combi$Parch), main="Parch (parents + kids aboard)", col="gray50")
 hist(combi$Fare, main="Fare (fee paid for ticket[s])", xlab = NULL,  col="darkgreen")
 barplot(table(combi$Embarked), names.arg = c("Cherbourg", "Queenstown", "Southampton"),main="Embarked (port of embarkation)", col="sienna")
 
+boxplot(combi$Age ~ combi$Pclass, main="Passenger by Class",  xlab="PClass", ylab="Age") ##relationship between Age and PClass
+boxplot(df_train$Age ~ df_train$Survived, main="Passenger by Age", xlab="Survived", ylab="Age") ## relationship between Age and Survival
 
 
-boxplot(df_train$Age ~ df_train$Survived, main="Passenger by Age", xlab="Survived", ylab="Age")
+## corrgram plot
+corrgram.data <- df_train
+## change features of factor type to numeric type for inclusion on correlogram
+corrgram.data$Survived <- as.numeric(corrgram.data$Survived)
+corrgram.data$Pclass <- as.numeric(corrgram.data$Pclass)
+corrgram.data$Embarked <- revalue(corrgram.data$Embarked, c("C" = 1, "Q" = 2, "S" = 3))
+## generate correlogram
+corrgram.vars <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")
+corrgram(corrgram.data[,corrgram.vars], order=FALSE, lower.panel=panel.ellipse, upper.panel=panel.pie, text.panel=panel.txt, main="Titanic Training Data")
+corrgram(corrgram.data[,corrgram.vars], order=TRUE, lower.panel=panel.shade, upper.panel=panel.pie, text.panel=panel.txt, main="Titanic Training Data")
+dev.off()
+
 
 ##########################################################################
 ##### Prediction using Condition Inference Random Forest  ################
