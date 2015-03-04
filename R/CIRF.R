@@ -31,6 +31,7 @@ library(lattice)
 library(caret)
 library(party)
 library(Amelia) ## Amelia is packages to display missing data using missmap function
+library(corrgram) ## display corrgram plot of different varaibles
 sessionInfo()
 
 ##########################################################################
@@ -121,7 +122,22 @@ test <- combi[501:891,]
 missmap(combi, main="Titanic Training Data - Missings Map", 
         col=c("yellow", "black"), legend=FALSE)
 
-## bar plot 
+
+##########################################################################
+##### Display plot of different variables                 ################
+##########################################################################
+barplot(table(train$Survived),names.arg = c("Dead", "Survived"), main="Survived (passenger)", col="blue")
+barplot(table(combi$Pclass), names.arg = c("first", "second", "third"), main="Pclass (passenger traveling class)", col="firebrick")
+barplot(table(combi$Sex), main="Sex (gender)", col="darkviolet")
+hist(combi$Age, main="Age", xlab = NULL, col="brown")
+barplot(table(combi$SibSp), main="SibSp (siblings + spouse aboard)", col="darkblue")
+barplot(table(combi$Parch), main="Parch (parents + kids aboard)", col="gray50")
+hist(combi$Fare, main="Fare (fee paid for ticket[s])", xlab = NULL,  col="darkgreen")
+barplot(table(combi$Embarked), names.arg = c("Cherbourg", "Queenstown", "Southampton"),main="Embarked (port of embarkation)", col="sienna")
+
+
+
+boxplot(df_train$Age ~ df_train$Survived, main="Passenger by Age", xlab="Survived", ylab="Age")
 
 ##########################################################################
 ##### Prediction using Condition Inference Random Forest  ################
