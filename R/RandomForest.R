@@ -278,7 +278,7 @@ write.csv(out, file = "data-cleanup/randomForest-prediction.csv", row.names = FA
 ##### Prediction using Condition Inference Random Forest  ################
 ##########################################################################
 library(party)
-fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Ticket+ Fare + Embarked + Title + FamilySize + FamilyID2,
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Ticket+ Fare + Embarked + Title + FamilySize + FamilyID2 + Pclass:Sex + Pclass:Age + Age:Sex,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
 
 ## Tree structure
