@@ -140,7 +140,7 @@ combi$FamilyID2 <- factor(combi$FamilyID2)
 
 # Split back into test and train data sets also it is necessary to remove all the missing data from 
 ## the data pool in order to apply Random Forest.
-train <- combi[1:891,]
+train <- combi[1:500,]
 #test <- combi[892:1309,]
 test <- combi[501:891,]
 
@@ -186,7 +186,12 @@ training.rows <- createDataPartition(train$Survived, p = 0.8, list = FALSE)
 train.batch <- train[training.rows, ]
 test.batch <- train[-training.rows, ]
 
-## model using GLM
+## Define control function to handle optional arguments for train function
+## Models to be assessed based on largest absolute area under ROC curve
+cv.ctrl <- trainControl(method = "repeatedcv", repeats = 3,
+                        summaryFunction = twoClassSummary,
+                        classProbs = TRUE)
+## model using RF
 require(stats)
 rf.grid <- data.frame(.mtry = c(2, 3))
 set.seed(35)
@@ -205,7 +210,7 @@ rf.tune <- train(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Tick
 ##########################################################################
 print("Prediction using Condition Inference Random Forest......")
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Ticket+ Fare + Embarked + Title + FamilySize + FamilyID2,
-               data = train), controls=cforest_unbiased(ntree=100, mtry=3))
+               data = train, controls=cforest_unbiased(ntree=50, mtry=3))
 
 
 ## Tree structure
